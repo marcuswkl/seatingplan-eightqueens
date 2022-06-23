@@ -8,13 +8,20 @@ class Node:
   def addChildren(self, children):
     self.children.extend(children)
 
-def expandAndReturnChildren(state_space, node):
+def expandAndReturnChildren(uncomfort_data, node):
   children = []
-  for [m,n,c] in state_space:
+  # ['A', 'B', 1.5]
+  print("Uncomfort data: " + str(uncomfort_data))
+  print("Node state: " + str(node.state))
+  # Node state is list, m and n element is string, ['A'] != 'A'
+  for [m,n,c] in uncomfort_data:
     if m == node.state:
+      print("Found m = node.state")
       children.append(Node(n, node.state, node.cost+c))
     elif n == node.state:
+      print("Found n = node.state")
       children.append(Node(m, node.state, node.cost+c))
+  print("Expand and return children:" + str(children))
   return children
 
 def appendAndSort(frontier, node):
@@ -36,7 +43,7 @@ def appendAndSort(frontier, node):
     frontier.insert(insert_index, node)
   return frontier
 
-def ucs(state_space, initial_state, goal_state):
+def ucs(uncomfort_data, initial_state, total_persons):
   frontier = []
   explored = []
   found_goal = False
@@ -47,12 +54,15 @@ def ucs(state_space, initial_state, goal_state):
   
   while not found_goal:
     # goal test at expansion
-    if frontier[0].state == goal_state:
+    if len(explored) == (total_persons - 1):
       found_goal = True
+      print("All persons have been allocated to a seat!")
+      print("Allocated persons: " + str(explored))
       goalie = frontier[0]
       break
     # expand the first in the frontier
-    children = expandAndReturnChildren(state_space, frontier[0])
+    print("Selected node: " + str(frontier[0].state))
+    children = expandAndReturnChildren(uncomfort_data, frontier[0])
     # add children list to the expanded node
     frontier[0].addChildren(children)
     # add to the explored list
@@ -72,45 +82,55 @@ def ucs(state_space, initial_state, goal_state):
   solution = [goalie.state]
   path_cost = goalie.cost
   while goalie.parent is not None:
+    print("Goalie parent: " + str(goalie.parent))
     solution.insert(0, goalie.parent)
     for e in explored:
       if e.state == goalie.parent:
         goalie = e
+        print("Goalie state: " + str(goalie.state))
         break
   return solution, path_cost
 
 if __name__ == "__main__":
   # state space and step cost definition
-  state_space = [
-    ["Arad", "Zerind", 75],
-    ["Zerind", "Oradea", 71],
-    ["Oradea", "Sibiu", 151],
-    ["Sibiu", "Arad", 140],
-    ["Sibiu", "Fagaras", 99],
-    ["Sibiu", "Rimnicu Vilcea", 80],
-    ["Fagaras", "Bucharest", 211],
-    ["Bucharest", "Giurgiu", 90],
-    ["Bucharest", "Pitesti", 101],
-    ["Pitesti", "Rimnicu Vilcea", 97],
-    ["Rimnicu Vilcea", "Craiova", 146],
-    ["Craiova", "Pitesti", 138],
-    ["Craiova", "Drobeta", 120],
-    ["Drobeta", "Mehadia", 75],
-    ["Mehadia", "Lugoj", 70],
-    ["Lugoj", "Timisoara", 111],
-    ["Arad", "Timisoara", 118],
-    ["Bucharest", "Urziceni", 85],
-    ["Urziceni", "Vaslui", 142],
-    ["Vaslui", "Iasi", 92],
-    ["Iasi", "Neamt", 87],
-    ["Urziceni", "Hirsova", 98],
-    ["Hirsova", "Eforie", 86]
+  uncomfort_data = [
+    ['A', 'B', 1.5],
+    ['A', 'C', 2],
+    ['A', 'D', 2],
+    ['A', 'E', 4],
+    ['B', 'C', 1],
+    ['B', 'D', 4.5],
+    ['B', 'E', 2.5],
+    ['C', 'D', 3],
+    ['C', 'E', 1.5],
+    ['D', 'E', 1]
   ]
 
-  initial_state = "Arad"
+  # # Get a list of alphabet to represent the peoples
+  # alp_list = list(string.ascii_uppercase)
+  # n =  int(input('Enter the number of people to be seated: '))
+    
+  # person_list = alp_list [:n]
+  # print(person_list) 
 
-  goal_state = "Bucharest"
+  # Define initial state
+  initial_state = 'A'
+  # first_person = random.choice(person_list)
+  # initial_state.append(first_person)  
+  print(initial_state)
 
-  [solution, cost] = ucs(state_space, initial_state, goal_state)
+  # # Input 
+  # print('Please enter the uncomfort value\n')
+  # print('The uncomfort value range from 1 (most comfortable) to 5 (most uncomfortable)\n')
+  # for i in range (n):
+  #   for j in range (n):
+  #       if (person_list[i] != person_list[j]):
+  #           print('Enter the uncomfort value of', person_list[i], 'towards', person_list[j],':')
+  #           v = input()
+  #           uncomfortVal=[person_list[i],person_list[j]]
+  #           uncomfortVal.append(v)
+  #           state_space.append(uncomfortVal) 
+
+  [solution, cost] = ucs(uncomfort_data, initial_state, 5)
   print("Solution:", solution)
   print("Path Cost:", cost)
