@@ -8,18 +8,17 @@ class Node:
   def addChildren(self, children):
     self.children.extend(children)
 
-def expandAndReturnChildren(uncomfort_data, node):
+def expandAndReturnChildren(state_space, node):
   children = []
   # ['A', 'B', 1.5]
-  print("Uncomfort data: " + str(uncomfort_data))
+  print("State space: " + str(state_space))
   print("Node state: " + str(node.state))
-  # Node state is list, m and n element is string, ['A'] != 'A'
-  for [m,n,c] in uncomfort_data:
+  for [m,n,c] in state_space:
     if m == node.state:
-      print("Found m = node.state")
+      # print("Found m = node.state")
       children.append(Node(n, node.state, node.cost+c))
     elif n == node.state:
-      print("Found n = node.state")
+      # print("Found n = node.state")
       children.append(Node(m, node.state, node.cost+c))
   print("Expand and return children:" + str(children))
   return children
@@ -30,10 +29,10 @@ def appendAndSort(frontier, node):
   for i, f in enumerate(frontier):
     if f.state == node.state:
       duplicated = True
-      if f.cost > node.cost:
-        del frontier[i]
-        removed = True
-        break    
+      # if f.cost > node.cost:
+      #   del frontier[i]
+      #   removed = True
+      #   break
   if (not duplicated) or removed:
     insert_index = len(frontier)
     for i, f in enumerate(frontier):
@@ -43,7 +42,17 @@ def appendAndSort(frontier, node):
     frontier.insert(insert_index, node)
   return frontier
 
-def ucs(uncomfort_data, initial_state, total_persons):
+# def get_parent_count(node, explored):
+#   parent_count = 0
+#   while node.parent is not None:
+#     parent_count += 1
+#     for e in explored:
+#       if e.state == node.parent:
+#         node = e
+#         break
+#   return parent_count
+
+def ucs(state_space, initial_state, total_persons):
   frontier = []
   explored = []
   found_goal = False
@@ -51,10 +60,12 @@ def ucs(uncomfort_data, initial_state, total_persons):
   solution = []
   # add initial state to frontier
   frontier.append(Node(initial_state, None))
+  depth = 1
+  # parent_count = 0
   
   while not found_goal:
     # goal test at expansion
-    if len(explored) == (total_persons - 1):
+    if depth == (total_persons - 1):
       found_goal = True
       print("All persons have been allocated to a seat!")
       print("Allocated persons: " + str(explored))
@@ -62,7 +73,7 @@ def ucs(uncomfort_data, initial_state, total_persons):
       break
     # expand the first in the frontier
     print("Selected node: " + str(frontier[0].state))
-    children = expandAndReturnChildren(uncomfort_data, frontier[0])
+    children = expandAndReturnChildren(state_space, frontier[0])
     # add children list to the expanded node
     frontier[0].addChildren(children)
     # add to the explored list
@@ -74,9 +85,17 @@ def ucs(uncomfort_data, initial_state, total_persons):
       # check if a node was expanded or generated previously
       if not (child.state in [e.state for e in explored]):        
         frontier = appendAndSort(frontier, child)
+    print("Frontier[0] Parent: " + str(frontier[0].parent))
+    print("Explored[-1] State: " + str(explored[-1].state))
+    if frontier[0].parent == explored[-1].state:
+      print("Depth increased.")
+      depth += 1
+    # parent_count = get_parent_count(frontier[0], explored)
     print("Explored:", [e.state for e in explored])
-    print("Frontier:", [(f.state, f.cost) for f in frontier])
+    print("Frontier:", [(f.parent, f.state, f.cost) for f in frontier])
     print("Children:", [c.state for c in children])
+    print("Depth: " + str(depth))
+    # print("Frontier Node Parent Count: " + str(get_parent_count(frontier[0], explored)))
     print("")
   
   solution = [goalie.state]
@@ -93,17 +112,17 @@ def ucs(uncomfort_data, initial_state, total_persons):
 
 if __name__ == "__main__":
   # state space and step cost definition
-  uncomfort_data = [
+  state_space = [
     ['A', 'B', 1.5],
-    ['A', 'C', 2],
-    ['A', 'D', 2],
-    ['A', 'E', 4],
-    ['B', 'C', 1],
+    ['A', 'C', 2.0],
+    ['A', 'D', 2.0],
+    ['A', 'E', 4.0],
+    ['B', 'C', 1.0],
     ['B', 'D', 4.5],
     ['B', 'E', 2.5],
-    ['C', 'D', 3],
+    ['C', 'D', 3.0],
     ['C', 'E', 1.5],
-    ['D', 'E', 1]
+    ['D', 'E', 1.0]
   ]
 
   # # Get a list of alphabet to represent the peoples
@@ -131,6 +150,6 @@ if __name__ == "__main__":
   #           uncomfortVal.append(v)
   #           state_space.append(uncomfortVal) 
 
-  [solution, cost] = ucs(uncomfort_data, initial_state, 5)
+  [solution, cost] = ucs(state_space, initial_state, 5)
   print("Solution:", solution)
   print("Path Cost:", cost)
