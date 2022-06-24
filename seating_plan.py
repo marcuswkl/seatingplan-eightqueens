@@ -29,7 +29,7 @@ def expand_and_return_children(state_space, explored, node):
   return children
 
 # Insert valid nodes into the frontier based on cost
-def appendAndSort(frontier, node, explored):
+def append_and_sort(frontier, node, explored):
   # If a node state is found in its list of parent nodes, the node is invalid
   invalid = False
   if node.state in node.parent_list:
@@ -119,7 +119,7 @@ def ucs(state_space, initial_state, no_of_persons):
     for child in children:
       # check if a node with its associated parents was expanded or generated previously
       if not ((child.parent_list + [child.state]) in [ e.parent_list + [e.state] for e in explored ]):
-        frontier = appendAndSort(frontier, child, explored)
+        frontier = append_and_sort(frontier, child, explored)
     print("Explored:", [e.state for e in explored])
     print("Frontier:", [(f.state, f.cost) for f in frontier])
     print("Children:", [c.state for c in children])
