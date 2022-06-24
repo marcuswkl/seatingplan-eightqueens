@@ -17,9 +17,11 @@ def expandAndReturnChildren(state_space, explored, node):
   # ['A', 'B', 1.5]
   print("State space: " + str(state_space))
   print("Node state: " + str(node.state))
-  parent_list = get_parent_list(node, explored)
+  # parent_list = get_parent_list(node, explored)
+  parent_list = node.parent_list
   print("Node Parents: " + str(parent_list))
   for [m,n,c] in state_space:
+    print([m, n, c])
     if m == node.state:
       # print (['A', n, c])
       # print("Found m = node.state")
@@ -34,6 +36,7 @@ def expandAndReturnChildren(state_space, explored, node):
 def appendAndSort(frontier, node, explored):
   # print("Evaluating current node: " + node.state)
   # Check if node is found in preceding nodes
+  # parent_list = get_parent_list(node, explored)
   parent_list = node.parent_list
   # print("Parent List: " + str(parent_list))
   duplicated = False
@@ -60,16 +63,6 @@ def appendAndSort(frontier, node, explored):
     # print("Current node inserted into frontier.")
     frontier.insert(insert_index, node)
   return frontier
-
-def get_parent_list(node, explored):
-  parent_list = []
-  while node.parent is not None:
-    parent_list.append(node.parent)
-    for e in explored:
-      if e.state == node.parent:
-        node = e
-        break
-  return parent_list
 
 def input_no_of_persons():
   no_of_persons = int(input('Enter the number of people to be seated: '))
@@ -123,11 +116,12 @@ def ucs(state_space, initial_state, no_of_persons):
   # add initial state to frontier
   frontier.append(Node(initial_state, None))
   # depth = 0
-  parent_count = 0
+  # parent_count = 0
   
   while not found_goal:
     # goal test at expansion
-    if parent_count == (no_of_persons - 1):
+    # if parent_count == (no_of_persons - 1) :
+    if (len(frontier[0].parent_list)) == (no_of_persons - 1):
       found_goal = True
       print("All persons have been allocated to a seat!")
       print("Allocated persons: " + str(explored))
@@ -150,32 +144,35 @@ def ucs(state_space, initial_state, no_of_persons):
       # if not (child.state in [e.state for e in explored]): 
       #   print("Current node is not expanded previously.")
       if not ((child.parent_list + [child.state]) in [ e.parent_list + [e.state] for e in explored ]):
+      # if not (child.state in [e.state for e in explored]) and not (child.parent_list == [e.parent_list for e in explored]):
         frontier = appendAndSort(frontier, child, explored)
     # print("Frontier[0] Parent: " + str(frontier[0].parent))
     # print("Explored[-1] State: " + str(explored[-1].state))
     # if frontier[0].parent == explored[-1].state:
     #   print("Depth increased.")
     #   depth += 1
-    parent_count = len(frontier[0].parent_list)
+    # parent_count = get_parent_count(frontier[0], explored)
     print("Explored:", [(e.parent_list, e.state) for e in explored])
     print("Frontier:", [(f.parent_list, f.state, f.cost) for f in frontier])
     print("Children:", [(c.parent_list, c.state) for c in children])
     # print("Depth: " + str(depth))
-    print("Frontier Node Parent List: " + str(frontier[0].parent_list))
-    print("Frontier Node Parent Count: " + str(len(frontier[0].parent_list)))
+    # print("Frontier Node Parent List: " + str(get_parent_list(frontier[0], explored)))
+    # print("Frontier Node Parent Count: " + str(get_parent_count(frontier[0], explored)))
 
     print("")
   
-  solution = [goalie.state]
+  solution = str(goalie.parent_list) + str(goalie.state)
+#   solution = [goalie.state]
   path_cost = goalie.cost
-  while goalie.parent is not None:
-    print("Goalie parent: " + str(goalie.parent))
-    solution.insert(0, goalie.parent)
-    for e in explored:
-      if e.state == goalie.parent:
-        goalie = e
-        print("Goalie state: " + str(goalie.state))
-        break
+  
+#   while goalie.parent is not None:
+#      print("Goalie parent: " + str(goalie.parent))
+#      solution.insert(0, goalie.parent)
+#      for e in explored:
+#        if e.state == goalie.parent:
+#          goalie = e
+#          print("Goalie state: " + str(goalie.state))
+#          break
   return solution, path_cost
 
 if __name__ == "__main__":
