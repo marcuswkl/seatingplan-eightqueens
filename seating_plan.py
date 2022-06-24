@@ -2,7 +2,7 @@ import string
 import random
 
 class Node:
-  def __init__(self, state=None, parent=None, parent_list=None, cost=0):
+  def __init__(self, state=None, parent=None, parent_list=[], cost=0):
     self.state = state
     self.parent = parent
     self.parent_list = parent_list
@@ -23,18 +23,18 @@ def expandAndReturnChildren(state_space, explored, node):
     if m == node.state:
       # print (['A', n, c])
       # print("Found m = node.state")
-      children.append(Node(n, node.state, parent_list, node.cost+c))
+      children.append(Node(n, node.state, parent_list + [m], node.cost+c))
     elif n == node.state:
       # print ([m, 'A', c])
       # print("Found n = node.state")
-      children.append(Node(m, node.state, parent_list, node.cost+c))
+      children.append(Node(m, node.state, parent_list + [n], node.cost+c))
   print("Expand and return children:" + str(children))
   return children
 
 def appendAndSort(frontier, node, explored):
   # print("Evaluating current node: " + node.state)
   # Check if node is found in preceding nodes
-  parent_list = get_parent_list(node, explored)
+  parent_list = node.parent_list
   # print("Parent List: " + str(parent_list))
   duplicated = False
   if node.state in parent_list:
@@ -70,16 +70,6 @@ def get_parent_list(node, explored):
         node = e
         break
   return parent_list
-
-def get_parent_count(node, explored):
-  parent_count = 0
-  while node.parent is not None:
-    parent_count += 1
-    for e in explored:
-      if e.state == node.parent:
-        node = e
-        break
-  return parent_count
 
 def input_no_of_persons():
   no_of_persons = int(input('Enter the number of people to be seated: '))
@@ -159,20 +149,20 @@ def ucs(state_space, initial_state, no_of_persons):
       #   print("Current node is expanded previously.")    
       # if not (child.state in [e.state for e in explored]): 
       #   print("Current node is not expanded previously.")
-      if not (child.state in [e.state for e in explored]) and not (child.parent_list == [e.parent_list for e in explored]):
+      if not ((child.parent_list + [child.state]) in [ e.parent_list + [e.state] for e in explored ]):
         frontier = appendAndSort(frontier, child, explored)
     # print("Frontier[0] Parent: " + str(frontier[0].parent))
     # print("Explored[-1] State: " + str(explored[-1].state))
     # if frontier[0].parent == explored[-1].state:
     #   print("Depth increased.")
     #   depth += 1
-    parent_count = get_parent_count(frontier[0], explored)
-    print("Explored:", [e.state for e in explored])
-    print("Frontier:", [(f.parent, f.state, f.cost) for f in frontier])
-    print("Children:", [c.state for c in children])
+    parent_count = len(frontier[0].parent_list)
+    print("Explored:", [(e.parent_list, e.state) for e in explored])
+    print("Frontier:", [(f.parent_list, f.state, f.cost) for f in frontier])
+    print("Children:", [(c.parent_list, c.state) for c in children])
     # print("Depth: " + str(depth))
-    print("Frontier Node Parent List: " + str(get_parent_list(frontier[0], explored)))
-    print("Frontier Node Parent Count: " + str(get_parent_count(frontier[0], explored)))
+    print("Frontier Node Parent List: " + str(frontier[0].parent_list))
+    print("Frontier Node Parent Count: " + str(len(frontier[0].parent_list)))
 
     print("")
   
