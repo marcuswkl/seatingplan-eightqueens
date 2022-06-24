@@ -5,69 +5,51 @@ class Node:
   def __init__(self, state=None, parent=None, parent_list=[], cost=0):
     self.state = state
     self.parent = parent
+    # Parent list is added to differentiate between nodes with same state but different parents
     self.parent_list = parent_list
     self.children = []
     self.cost = cost
 
-  def addChildren(self, children):
+  def add_children(self, children):
     self.children.extend(children)
 
-def expandAndReturnChildren(state_space, explored, node):
+# Expands the selected node and return the list of children nodes
+def expand_and_return_children(state_space, explored, node):
   children = []
-  # ['A', 'B', 1.5]
-  print("State space: " + str(state_space))
   print("Node state: " + str(node.state))
-  # parent_list = get_parent_list(node, explored)
   parent_list = node.parent_list
   print("Node Parents: " + str(parent_list))
   for [m,n,c] in state_space:
     print([m, n, c])
     if m == node.state:
-      # print (['A', n, c])
-      # print("Found m = node.state")
       children.append(Node(n, node.state, parent_list + [m], node.cost+c))
     elif n == node.state:
-      # print ([m, 'A', c])
-      # print("Found n = node.state")
       children.append(Node(m, node.state, parent_list + [n], node.cost+c))
   print("Expand and return children:" + str(children))
   return children
 
+# Insert valid nodes into the frontier based on cost
 def appendAndSort(frontier, node, explored):
-  # print("Evaluating current node: " + node.state)
-  # Check if node is found in preceding nodes
-  # parent_list = get_parent_list(node, explored)
-  parent_list = node.parent_list
-  # print("Parent List: " + str(parent_list))
-  duplicated = False
-  if node.state in parent_list:
-    duplicated = True
+  # If a node state is found in its list of parent nodes, the node is invalid
+  invalid = False
+  if node.state in node.parent_list:
+    invalid = True
 
-  # duplicated = False
-  # removed = False
-  # for i, f in enumerate(frontier):
-    # if f.state == node.state:
-      # print("Current node is a duplicate.")
-      # duplicated = True
-      # if f.cost > node.cost:
-      #   del frontier[i]
-      #   removed = True
-      #   break
-  # if (not duplicated) or removed:
-  if (not duplicated):
+  if (not invalid):
     insert_index = len(frontier)
     for i, f in enumerate(frontier):
       if f.cost > node.cost:
         insert_index = i
         break
-    # print("Current node inserted into frontier.")
     frontier.insert(insert_index, node)
   return frontier
 
+# Obtain the number of persons for the state space
 def input_no_of_persons():
   no_of_persons = int(input('Enter the number of people to be seated: '))
   return no_of_persons
 
+# Obtain and generate the state space for the search algorithm
 def input_state_space(no_of_persons):
   alp_list = list(string.ascii_uppercase)
   # Represent N number of people with the first N alphabet
@@ -78,9 +60,10 @@ def input_state_space(no_of_persons):
   initial_state = first_person
   print("Initial State: " + str(initial_state))
 
-  print('Please enter two uncomfort value for each pair of people.\n')
-  print('The uncomfort value range from 1 (most comfortable) to 5 (most uncomfortable)\n')
-  print('eg: 1,2 ') 
+  print("Please enter two uncomfortability value for each pair of person.\n")
+  print("The uncomfortability value range from 1 (least uncomfortable) to 5 (most uncomfortable)\n")
+  print("eg: 1,2") 
+  print("There is no space between the numbers and comma.") 
     
   # Show all possible pairs from the list
   pair = []
@@ -92,14 +75,14 @@ def input_state_space(no_of_persons):
           person_pair.append(pair)
           j += 1
           
-  # Ask the user to input the uncomfort value for each pair of people
+  # Ask the user to input the uncomfortability value for each pair of persons
   uncomfort_val = []
   state_space = []
   for i in range (len(person_pair)):
       print('Enter the uncomfort value of', person_pair[i][0], 'and', person_pair[i][1],':')
       x,y = input().split(",")
       
-      # Standardise the uncomfort value to double
+      # Standardise the uncomfortability value to double
       avg_val = float((int(x) + int(y)) / 2)
       uncomfort_val=[person_pair[i][0],person_pair[i][1]]
       uncomfort_val.append(avg_val)
@@ -113,76 +96,50 @@ def ucs(state_space, initial_state, no_of_persons):
   found_goal = False
   goalie = Node()
   solution = []
-  # add initial state to frontier
+  # Add initial state to frontier
   frontier.append(Node(initial_state, None))
-  # depth = 0
-  # parent_count = 0
   
   while not found_goal:
-    # goal test at expansion
-    # if parent_count == (no_of_persons - 1) :
+    # The goal is tested at expansion of node
+    # The goal is found when the first frontier node has the correct number of parents
     if (len(frontier[0].parent_list)) == (no_of_persons - 1):
       found_goal = True
       print("All persons have been allocated to a seat!")
-      print("Allocated persons: " + str(explored))
       goalie = frontier[0]
       break
-    # expand the first in the frontier
-    children = expandAndReturnChildren(state_space, explored, frontier[0])
-    # add children list to the expanded node
-    frontier[0].addChildren(children)
-    # add to the explored list
+    # Expand the first node in the frontier
+    children = expand_and_return_children(state_space, explored, frontier[0])
+    # Add children list to the expanded node
+    frontier[0].add_children(children)
+    # Add to the explored list
     explored.append(frontier[0])
-    # remove the expanded frontier
+    # Remove the expanded frontier
     del frontier[0]
-    # add children to the frontier
+    # Add children to the frontier
     for child in children:
-      # print("Iterating over current child: " + child.state)
-      # check if a node was expanded or generated previously
-      # if child.state in [e.state for e in explored]: 
-      #   print("Current node is expanded previously.")    
-      # if not (child.state in [e.state for e in explored]): 
-      #   print("Current node is not expanded previously.")
+      # check if a node with its associated parents was expanded or generated previously
       if not ((child.parent_list + [child.state]) in [ e.parent_list + [e.state] for e in explored ]):
-      # if not (child.state in [e.state for e in explored]) and not (child.parent_list == [e.parent_list for e in explored]):
         frontier = appendAndSort(frontier, child, explored)
-    # print("Frontier[0] Parent: " + str(frontier[0].parent))
-    # print("Explored[-1] State: " + str(explored[-1].state))
-    # if frontier[0].parent == explored[-1].state:
-    #   print("Depth increased.")
-    #   depth += 1
-    # parent_count = get_parent_count(frontier[0], explored)
-    print("Explored:", [(e.parent_list, e.state) for e in explored])
-    print("Frontier:", [(f.parent_list, f.state, f.cost) for f in frontier])
-    print("Children:", [(c.parent_list, c.state) for c in children])
-    # print("Depth: " + str(depth))
-    # print("Frontier Node Parent List: " + str(get_parent_list(frontier[0], explored)))
-    # print("Frontier Node Parent Count: " + str(get_parent_count(frontier[0], explored)))
-
+    print("Explored:", [e.state for e in explored])
+    print("Frontier:", [(f.state, f.cost) for f in frontier])
+    print("Children:", [c.state for c in children])
     print("")
   
-  solution = str(goalie.parent_list) + str(goalie.state)
-#   solution = [goalie.state]
+  # Output the solution
+  solution = str(goalie.parent_list)[:-1] + ", \'" + str(goalie.state) + "\']"
   path_cost = goalie.cost
-  
-#   while goalie.parent is not None:
-#      print("Goalie parent: " + str(goalie.parent))
-#      solution.insert(0, goalie.parent)
-#      for e in explored:
-#        if e.state == goalie.parent:
-#          goalie = e
-#          print("Goalie state: " + str(goalie.state))
-#          break
   return solution, path_cost
 
 if __name__ == "__main__":
-  # state space and step cost definition
+  # Obtain the number of persons
   no_of_persons = input_no_of_persons()
+  # Obtain the generated state space and initial state
   [state_space, initial_state] = input_state_space(no_of_persons)
   print("State space generated:")
   for state in state_space:
     print(state)
   
+  # Perform uniform cost search and output the results
   [solution, cost] = ucs(state_space, initial_state, no_of_persons)
   print("Solution:", solution)
   print("Path Cost:", cost)
