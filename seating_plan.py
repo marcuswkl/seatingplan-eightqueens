@@ -15,42 +15,65 @@ def expandAndReturnChildren(state_space, node):
   print("Node state: " + str(node.state))
   for [m,n,c] in state_space:
     if m == node.state:
+      # print (['A', n, c])
       # print("Found m = node.state")
       children.append(Node(n, node.state, node.cost+c))
     elif n == node.state:
+      # print ([m, 'A', c])
       # print("Found n = node.state")
       children.append(Node(m, node.state, node.cost+c))
   print("Expand and return children:" + str(children))
   return children
 
-def appendAndSort(frontier, node):
+def appendAndSort(frontier, node, explored):
+  # print("Evaluating current node: " + node.state)
+  # Check if node is found in preceding nodes
+  parent_list = get_parent_list(node, explored)
+  # print("Parent List: " + str(parent_list))
   duplicated = False
-  removed = False
-  for i, f in enumerate(frontier):
-    if f.state == node.state:
-      duplicated = True
+  if node.state in parent_list:
+    duplicated = True
+
+  # duplicated = False
+  # removed = False
+  # for i, f in enumerate(frontier):
+    # if f.state == node.state:
+      # print("Current node is a duplicate.")
+      # duplicated = True
       # if f.cost > node.cost:
       #   del frontier[i]
       #   removed = True
       #   break
-  if (not duplicated) or removed:
+  # if (not duplicated) or removed:
+  if (not duplicated):
     insert_index = len(frontier)
     for i, f in enumerate(frontier):
       if f.cost > node.cost:
         insert_index = i
         break
+    # print("Current node inserted into frontier.")
     frontier.insert(insert_index, node)
   return frontier
 
-# def get_parent_count(node, explored):
-#   parent_count = 0
-#   while node.parent is not None:
-#     parent_count += 1
-#     for e in explored:
-#       if e.state == node.parent:
-#         node = e
-#         break
-#   return parent_count
+def get_parent_list(node, explored):
+  parent_list = []
+  while node.parent is not None:
+    parent_list.append(node.parent)
+    for e in explored:
+      if e.state == node.parent:
+        node = e
+        break
+  return parent_list
+
+def get_parent_count(node, explored):
+  parent_count = 0
+  while node.parent is not None:
+    parent_count += 1
+    for e in explored:
+      if e.state == node.parent:
+        node = e
+        break
+  return parent_count
 
 def ucs(state_space, initial_state, total_persons):
   frontier = []
@@ -60,19 +83,18 @@ def ucs(state_space, initial_state, total_persons):
   solution = []
   # add initial state to frontier
   frontier.append(Node(initial_state, None))
-  depth = 1
+  depth = 0
   # parent_count = 0
   
   while not found_goal:
     # goal test at expansion
-    if depth == (total_persons - 1):
+    if depth == 3:
       found_goal = True
       print("All persons have been allocated to a seat!")
       print("Allocated persons: " + str(explored))
       goalie = frontier[0]
       break
     # expand the first in the frontier
-    print("Selected node: " + str(frontier[0].state))
     children = expandAndReturnChildren(state_space, frontier[0])
     # add children list to the expanded node
     frontier[0].addChildren(children)
@@ -82,20 +104,26 @@ def ucs(state_space, initial_state, total_persons):
     del frontier[0]
     # add children to the frontier
     for child in children:
+      # print("Iterating over current child: " + child.state)
       # check if a node was expanded or generated previously
-      if not (child.state in [e.state for e in explored]):        
-        frontier = appendAndSort(frontier, child)
+      # if child.state in [e.state for e in explored]: 
+      #   print("Current node is expanded previously.")    
+      # if not (child.state in [e.state for e in explored]): 
+      #   print("Current node is not expanded previously.")       
+      frontier = appendAndSort(frontier, child, explored)
     print("Frontier[0] Parent: " + str(frontier[0].parent))
     print("Explored[-1] State: " + str(explored[-1].state))
-    if frontier[0].parent == explored[-1].state:
-      print("Depth increased.")
-      depth += 1
-    # parent_count = get_parent_count(frontier[0], explored)
+    # if frontier[0].parent == explored[-1].state:
+    #   print("Depth increased.")
+    #   depth += 1
+    parent_count = get_parent_count(frontier[0], explored)
     print("Explored:", [e.state for e in explored])
     print("Frontier:", [(f.parent, f.state, f.cost) for f in frontier])
     print("Children:", [c.state for c in children])
-    print("Depth: " + str(depth))
-    # print("Frontier Node Parent Count: " + str(get_parent_count(frontier[0], explored)))
+    # print("Depth: " + str(depth))
+    print("Frontier Node Parent List: " + str(get_parent_list(frontier[0], explored)))
+    print("Frontier Node Parent Count: " + str(get_parent_count(frontier[0], explored)))
+
     print("")
   
   solution = [goalie.state]
