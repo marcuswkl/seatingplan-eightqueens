@@ -1,4 +1,4 @@
-# ai-problems
+# seatingplan-eightqueens
 
 Implement one search algorithm for each of the problems using Python.
 
